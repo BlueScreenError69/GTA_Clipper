@@ -1,0 +1,85 @@
+# Editable detection settings. Thresholds are z-scores against a rolling local baseline.
+signals:
+  loudness:
+    window_s: 120        # rolling baseline window (centered)
+    z_threshold: 2.0
+    min_std_db: 2.0      # floor so near-constant audio doesn't create fake peaks
+  speech_rate:
+    window_s: 120
+    smooth_s: 5
+    z_threshold: 2.0
+    min_std: 0.5
+    min_rate: 2.0        # words/sec needed to count as a burst
+  chat_activity:
+    window_s: 120
+    smooth_s: 10
+    z_threshold: 1.5     # chat is bursty; a 30 s burst inside a 120 s window gives z~1.9
+    min_std: 0.3
+    min_rate: 0.3        # msgs/sec needed to count as a chat burst
+  keywords:
+    pad_s: 1.5
+    # lower-case; multi-word phrases allowed. Add your streamer's catchphrases.
+    list:
+      - no way
+      - oh my god
+      - omg
+      - what the
+      - holy
+      - let's go
+      - lets go
+      - are you kidding
+      - i can't believe
+      - wait what
+      - bro
+      - dude
+      - insane
+      - crazy
+      - clip that
+      - got him
+      - oh no
+      - help
+      # Hindi / Hinglish exclamations
+      - arre
+      - are yaar
+      - kya baat
+      - bhai
+      - nahi yaar
+      - yaar
+      - ye kya hai
+      - pagal
+      - mast
+
+candidates:
+  weights: {loudness: 0.3, speech_rate: 0.3, keywords: 0.4, chat_activity: 0.3}
+  min_moment: 0.15      # combined score a second needs to belong to a moment
+  merge_gap_s: 10       # moments closer than this become one
+  lead_s: 12            # lead-in before the peak (aim 8-15)
+  payoff_s: 15          # payoff after the peak (aim 10-25)
+  max_overlap: 0.25     # windows overlapping a better one by more than this are dropped
+  snap_s: 2.0           # max shift when snapping edges to word/pause boundaries
+  pause_s: 0.3          # gap that counts as a natural pause
+  music_words: [music, song, radio, playlist, track, lyrics]
+  music_min_wps: 0.8    # loud but fewer words/sec than this => possible_music
+
+render:
+  section_pad_s: 3          # extra seconds downloaded around each clip for accurate cutting
+  top_height_frac: 0.34     # facecam layout: share of the 9:16 frame used by the facecam
+  crf: 20
+  loudnorm: "I=-16:TP=-1.5:LRA=11"   # single-pass, conservative
+
+# Caption styles rotate by candidate number so neighbouring clips don't look identical.
+# y_frac = vertical centre of the caption (kept above the bottom HUD / platform UI zone).
+captions:
+  words_per_line: 3
+  styles:
+    - {name: bold_white, font: "Arial Black", size: 88, primary: "#FFFFFF", highlight: "#FFE600", outline: "#000000", outline_w: 6, y_frac: 0.62, upper: true}
+    - {name: yellow_pop, font: "Arial Black", size: 96, primary: "#FFE600", highlight: "#FFFFFF", outline: "#000000", outline_w: 7, y_frac: 0.58, upper: true}
+    - {name: clean_lower, font: "Arial", size: 76, primary: "#FFFFFF", highlight: "#3DDC84", outline: "#000000", outline_w: 5, y_frac: 0.70, upper: false}
+    - {name: neon, font: "Impact", size: 92, primary: "#00E5FF", highlight: "#FF2D95", outline: "#101010", outline_w: 6, y_frac: 0.55, upper: true}
+
+package:
+  hashtags: ["#GTA6", "#Shorts"]
+  default_credit: "Clip from {creator}"   # used only when program_rules has no required_credit
+  max_table_rows: 18                      # keeps review/summary.md under 40 lines
+
+# chat_activity signal (live recordings only; needs chat.json written by `clipper live`)
